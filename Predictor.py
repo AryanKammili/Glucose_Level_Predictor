@@ -47,8 +47,8 @@ model = tf.keras.Sequential([
 
 model.compile(
     loss=tf.losses.mae,
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
     metrics=["mae"]
 )
 
-model.fit(x_train, y_train, epochs=400, verbose=1)
+model.fit(x_train, y_train, epochs=600, verbose=1)
