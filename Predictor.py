@@ -2,8 +2,9 @@ import pandas as pd
 import os
 
 from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
 from sklearn import model_selection
+
 
 
 class Predictor:
@@ -25,15 +26,16 @@ class Predictor:
                         "Average_Glucose", "BMI", "Smoking_Status",
                         "Stroke"]
 
-        transformer = make_column_transformer(
+        self.transformer = make_column_transformer(
             (StandardScaler(), ["Age", "Hypertension", "Heart_Disease", "BMI", "Stroke"]),
-            (OneHotEncoder(handle_unknown="ignore"), ["Gender", "Ever_Married", "Work_Type", "Residence_Type"])
+            (OneHotEncoder(), ["Gender", "Ever_Married", "Work_Type", "Residence_Type"])
         )
 
         y = data["Average_Glucose"]
+
         x = data.drop("Average_Glucose", axis=1)
 
-        x = transformer.fit_transform(x)
+        x = self.transformer.fit_transform(x)
 
         y = y.astype(float)
 
@@ -57,3 +59,6 @@ class Predictor:
 
     def predict(self, x_list):
         return self.model.predict(x_list)
+
+    def transform_data(self, vals):
+        return self.transformer.transform(vals)
