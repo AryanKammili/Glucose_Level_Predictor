@@ -1,9 +1,6 @@
 import tkinter as tk
-import numpy as np
-import pandas as pd
 from Predictor import Predictor
 
-# Colors #
 gray = "#363636"
 lightBlue = "#0080FE"
 white = "#FBFCF8"
