@@ -63,6 +63,9 @@ def Submit():
 
     prediction = round(prediction, 2)
 
+    if prediction < 0:
+        prediction = "Try Again"
+
     string = "Result: " + str(prediction)
 
     status.config(text=string)
