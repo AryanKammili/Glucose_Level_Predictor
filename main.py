@@ -1,5 +1,6 @@
 import tkinter as tk
 import numpy as np
+import pandas as pd
 from Predictor import Predictor
 
 # Colors #
@@ -56,15 +57,15 @@ def Submit():
     residence = residenceVar.get()
     stroke = strokeVar.get()
 
-    x_list = np.array([gender, age, hyper, disease, married, work, residence, bmi, stroke])
+    x_list = [gender, age, hyper, disease, married, work, residence, bmi, stroke]
 
-    x_list = x_list.reshape(1, -1)
+    prediction = predictor.predict(x_list)[0][0]
 
-    x_list = predictor.transform_data(x_list)
+    prediction = round(prediction, 2)
 
-    prediction = predictor.predict(x_list)
+    string = "Result: " + str(prediction)
 
-    status.config(text="Result: " + prediction)
+    status.config(text=string)
 
 
 title = tk.Label(
@@ -233,7 +234,7 @@ ageEntry.place(x=50, y=590)
 # Work Type Selector #
 workVar = tk.StringVar()
 workVar.set("Choose Work Status Option")
-work_options = ["Children", "Government", "Private", "Self Employed"]
+work_options = ["children", "Govt_jov", "Private", "Self-employed"]
 
 work_selection = tk.OptionMenu(
     window,

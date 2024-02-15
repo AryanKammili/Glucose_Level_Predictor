@@ -1,10 +1,10 @@
 import pandas as pd
+import numpy as np
 import os
 
 from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn import model_selection
-
 
 
 class Predictor:
@@ -14,26 +14,24 @@ class Predictor:
 
         import tensorflow as tf
 
-        data = pd.read_csv("full_filled_stroke_data (1).csv",
-                           header=None,
-                           delimiter=",")
+        self.data = pd.read_csv("full_filled_stroke_data (1).csv",
+                                header=None,
+                                delimiter=",")
 
-        data = data.iloc[1:, :]
+        self.data = self.data.iloc[1:, :]
 
-        data.columns = ["Gender", "Age", "Hypertension",
-                        "Heart_Disease", "Ever_Married",
-                        "Work_Type", "Residence_Type",
-                        "Average_Glucose", "BMI", "Smoking_Status",
-                        "Stroke"]
+        self.data.columns = ["Gender", "Age", "Hypertension",
+                             "Heart_Disease", "Ever_Married",
+                             "Work_Type", "Residence_Type",
+                             "Average_Glucose", "BMI", "Smoking_Status",
+                             "Stroke"]
 
         self.transformer = make_column_transformer(
-            (StandardScaler(), ["Age", "Hypertension", "Heart_Disease", "BMI", "Stroke"]),
-            (OneHotEncoder(), ["Gender", "Ever_Married", "Work_Type", "Residence_Type"])
-        )
+            (StandardScaler(), ["Age", "BMI"]),
+            (OneHotEncoder(handle_unknown="ignore"), ["Gender", "Hypertension", "Heart_Disease", "Ever_Married", "Work_Type", "Residence_Type", "Stroke"]))
 
-        y = data["Average_Glucose"]
-
-        x = data.drop("Average_Glucose", axis=1)
+        y = self.data["Average_Glucose"]
+        x = self.data.drop(["Average_Glucose", "Smoking_Status"], axis=1)
 
         x = self.transformer.fit_transform(x)
 
@@ -42,9 +40,9 @@ class Predictor:
         x_train, x_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.1)
 
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=15, dtype=tf.float32),
+            tf.keras.layers.Input(shape=18, dtype=tf.float32),
             tf.keras.layers.Dense(units=60, activation="gelu"),
-            tf.keras.layers.Dense(units=400, activation="gelu"),
+            tf.keras.layers.Dense(units=40, activation="gelu"),
             tf.keras.layers.Dense(units=20, activation="gelu"),
             tf.keras.layers.Dense(units=1)
         ])
@@ -55,10 +53,16 @@ class Predictor:
             metrics=["mae"]
         )
 
-        self.model.fit(x_train, y_train, epochs=600, verbose=1)
+        self.model.fit(x_train, y_train, epochs=400, verbose=0)
 
-    def predict(self, x_list):
-        return self.model.predict(x_list)
+    def predict(self, vals):
+        x_list = np.array(vals).reshape(1, 9)
 
-    def transform_data(self, vals):
-        return self.transformer.transform(vals)
+        reshaped = pd.DataFrame(x_list, columns=["Gender", "Age", "Hypertension",
+                                       "Heart_Disease", "Ever_Married",
+                                       "Work_Type", "Residence_Type",
+                                       "BMI", "Stroke"])
+
+        final = self.transformer.transform(reshaped)
+
+        return self.model.predict(final)
