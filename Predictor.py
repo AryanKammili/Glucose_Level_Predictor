@@ -7,10 +7,14 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn import model_selection
 
 
+def ignore():
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+
 class Predictor:
     def __init__(self):
         # Ignores warning that I don't have a GPU ;( #
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+        ignore()
 
         import tensorflow as tf
 
@@ -28,7 +32,8 @@ class Predictor:
 
         self.transformer = make_column_transformer(
             (StandardScaler(), ["Age", "BMI"]),
-            (OneHotEncoder(handle_unknown="ignore"), ["Gender", "Hypertension", "Heart_Disease", "Ever_Married", "Work_Type", "Residence_Type", "Stroke"]))
+            (OneHotEncoder(handle_unknown="ignore"),
+             ["Gender", "Hypertension", "Heart_Disease", "Ever_Married", "Work_Type", "Residence_Type", "Stroke"]))
 
         y = self.data["Average_Glucose"]
         x = self.data.drop(["Average_Glucose", "Smoking_Status"], axis=1)
@@ -41,9 +46,9 @@ class Predictor:
 
         self.model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=18, dtype=tf.float32),
+            tf.keras.layers.Dense(units=100, activation="gelu"),
             tf.keras.layers.Dense(units=60, activation="gelu"),
             tf.keras.layers.Dense(units=40, activation="gelu"),
-            tf.keras.layers.Dense(units=20, activation="gelu"),
             tf.keras.layers.Dense(units=1)
         ])
 
@@ -53,15 +58,15 @@ class Predictor:
             metrics=["mae"]
         )
 
-        self.model.fit(x_train, y_train, epochs=400, verbose=0)
+        self.model.fit(x_train, y_train, epochs=800, verbose=1)
 
     def predict(self, vals):
         x_list = np.array(vals).reshape(1, 9)
 
         reshaped = pd.DataFrame(x_list, columns=["Gender", "Age", "Hypertension",
-                                       "Heart_Disease", "Ever_Married",
-                                       "Work_Type", "Residence_Type",
-                                       "BMI", "Stroke"])
+                                                 "Heart_Disease", "Ever_Married",
+                                                 "Work_Type", "Residence_Type",
+                                                 "BMI", "Stroke"])
 
         final = self.transformer.transform(reshaped)
 
